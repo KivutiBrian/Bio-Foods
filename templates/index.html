@@ -128,7 +128,7 @@
                 <div class="card-body-icon">
                   <i class="fas fa-fw fa-comments"></i>
                 </div>
-                <div class="mr-5">26 New Messages</div>
+                <div class="mr-5">{{ customer_count }} Customers</div>
               </div>
 
             </div>
@@ -139,7 +139,7 @@
                 <div class="card-body-icon">
                   <i class="fas fa-fw fa-list"></i>
                 </div>
-                <div class="mr-5">11 New Tasks!</div>
+                <div class="mr-5">{{ product_count }} Products</div>
               </div>
 
             </div>
@@ -150,7 +150,7 @@
                 <div class="card-body-icon">
                   <i class="fas fa-fw fa-shopping-cart"></i>
                 </div>
-                <div class="mr-5">123 New Orders!</div>
+                <div class="mr-5">{{ order_count }} New Orders!</div>
               </div>
 
             </div>
@@ -161,7 +161,7 @@
                 <div class="card-body-icon">
                   <i class="fas fa-fw fa-life-ring"></i>
                 </div>
-                <div class="mr-5">13 New Tickets!</div>
+                <div class="mr-5">Total Order Value: Ksh. {{'%0.0f'|format(order_value|float) }}</div>
               </div>
  
             </div>
@@ -179,7 +179,7 @@
       <footer class="sticky-footer">
         <div class="container my-auto">
           <div class="copyright text-center my-auto">
-            <span>Copyright © Your Website 2019</span>
+            <span>Copyright © Your Website 2021</span>
           </div>
         </div>
       </footer>

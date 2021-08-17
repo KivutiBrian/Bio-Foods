@@ -71,7 +71,6 @@ def admin():
                 # set the admin session
                 session['admin'] = email
                 session['aid'] = Admin.get_admin_id(email)
-                print(session)
                 return redirect(url_for('home'))
             else:
                 flash('Invalid Credentials','danger')
@@ -92,8 +91,15 @@ def logout():
 @app.route('/dashboard', methods=['GET','POST'])
 def home():
     if session:
-        print(session)
-        return render_template('index.html')
+        customer_count = CustomerModel.query.count()
+        product_count = Products.query.count()
+        order_count = Orders.query.count()
+        order_value = 0
+        orders = Orders.query.all()
+        for order in orders:
+            order_value += order.total
+
+        return render_template('index.html', customer_count = customer_count, product_count = product_count, order_count = order_count, order_value = order_value)
     else:
         flash('Please login to gain access', 'danger')
         return redirect(url_for('admin'))
@@ -105,6 +111,7 @@ def products():
         if request.method == 'POST':
             name = request.form['name']
             price = request.form['price']
+            quantity = request.form['quantity']
             # check if a product already exists
             if Products.check_product_exists(name):
                 # if true, redirect to products page
@@ -112,7 +119,7 @@ def products():
                 return redirect(url_for('products'))
             else:
                 # add the product
-                p = Products(name=name,price=price)
+                p = Products(name=name,price=price, quantity = quantity)
                 p.insert_record()
                 flash('Record successfully added', 'success')
                 return redirect(url_for('products'))
@@ -134,8 +141,9 @@ def update_product(id):
     if request.method == 'POST':
         newname = request.form['newname']
         newprice = request.form['newprice']
+        newquantity = request.form['newquantity']
 
-        update = Products.update_by_id(id=id,name=newname,price=newprice)
+        update = Products.update_by_id(id=id,name=newname,price=newprice, quantity = newquantity)
 
         if update:
             flash('successfully updated', 'success')
@@ -226,16 +234,23 @@ def cust_home():
         if request.method == 'POST':
             email = session['email']
             product = request.form['productname']
-            company = request.form['name']
-            
-            qun = request.form['quantity']
-            
+            company = request.form['name']            
+            qun = request.form['quantity']            
             date = request.form['date']
 
-            ch = Orders(email=email,product=product,orderdate=date,customer_id=session['uid'], company=company)
-            ch.create_record()
-            flash('Order successfully made','success')
-            return redirect(url_for('cust_home'))
+            # check for the product quantity
+            # product_to_check = Products.query.filter_by(name=product).first()
+
+            if qun > 0:
+                flash('Quantity ordered is higher than stock remaining','danger')
+                return redirect(url_for('cust_home'))
+            else:
+                ch = Orders(email=email,product=product,orderdate=date,customer_id=session['uid'], company=company)
+                ch.create_record()
+
+                flash('Order successfully made','success')
+                return redirect(url_for('cust_home'))
+            
         return render_template('customerorder.html', products=allproducts)
     else:
         flash('Please login','danger')
@@ -251,11 +266,25 @@ def prodjson():
 def orderJson():
     if session:
         data = request.get_json(force=True)
-        print(data)
-        o = Orders(email=session['email'],quantity=data['quantity'],total=data['total'],
-                    product_id=data['product_id'],company=session['companyname'],customer_id=session['uid']) 
-        o.create_record()
-        return 'Order successfully saved'
+        stock_item = Products.query.filter_by(id = data['product_id']).first()
+
+        if int(data['quantity']) > int(stock_item.quantity):
+            flash('Quantity ordered is higher than stock remaining','danger')
+            print('==========')
+            print('Quantity ordered is higher than stock remaining - order and stock quantity not updated')
+            print('==========')
+
+            return 'We have an error', 400
+        else:            
+            # update the product's stock quantity when an order is made
+            stock_item.quantity = int(stock_item.quantity) - int(data['quantity'])            
+            db.session.add(stock_item)
+            db.session.commit()
+
+            o = Orders(email=session['email'],quantity=data['quantity'],total=data['total'], product_id=data['product_id'],company=session['companyname'],customer_id=session['uid'])
+            o.create_record()
+
+            return 'Order successfully saved', 200
 
 
 @app.route('/manual/order', methods=['GET','POST'])

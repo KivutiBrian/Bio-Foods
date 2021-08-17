@@ -5,6 +5,7 @@ class Products(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), nullable=False)
     price = db.Column(db.String(30), nullable=False)
+    quantity = db.Column(db.String(30), nullable=False)
     cust = db.relationship('Orders', backref='order')
 
     # CREATE
@@ -29,13 +30,15 @@ class Products(db.Model):
 
     # update a product
     @classmethod
-    def update_by_id(cls,id,name=None,price=None):
+    def update_by_id(cls,id,name=None,price=None, quantity=None):
         product = cls.query.filter_by(id=id).first()
         if product:
             if name:
                 product.name = name
             if price:
                 product.price = price
+            if quantity:
+                product.quantity = quantity
                 
             db.session.commit()
             return True

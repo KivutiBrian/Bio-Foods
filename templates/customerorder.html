@@ -105,7 +105,10 @@
                             <div class="">
                               <div v-if="show" class="alert alert-success" role="alert">
                                 Order successfully submitted
-                              </div>
+                              </div> 
+                              <div v-if="show_error" class="alert alert-danger" role="alert">
+                                There is not enough stock to fulfil the order
+                              </div>                             
                               <form action="/customer/home" method="POST" class="shadow-md">
                                   <div class="form-group col-10">
                                       <label for="exampleFormControlSelect1" class="text-monospace text-danger">Select Product *</label>
@@ -156,7 +159,7 @@
       <footer class="sticky-footer">
         <div class="container my-auto">
           <div class="copyright text-center my-auto">
-            <span>Copyright © Your Website 2019</span>
+            <span>Copyright © Your Website 2021</span>
           </div>
         </div>
       </footer>
@@ -213,7 +216,8 @@
         price: 0,
         quantity: 0,
         total: 0,
-        show:false
+        show:false,
+        show_error:false,
       },
       delimiters: ['[[',']]'],
   
@@ -240,15 +244,24 @@
             axios
             .post('/add/order',  {total:this.total,quantity:this.quantity,product_id:this.selected.id})
             .then(response =>{
+              console.log(response.data)
               if(response.status == 200){
                 this.show = true
                 this.total = 0
                 this.quantity = 0
                 this.selected = []
               }
-            });
-
+              else if (response.status = 400){
+                this.show_error = true
+                // alert("Error 400: Bad Request")
+              }
+            })
+            .catch(error => {
+              this.show_error = true
+              // alert('we have an error')
+            })
             setTimeout(()=>this.show = false,5000)
+            setTimeout(()=>this.show_error = false,5000)
             
       }
       

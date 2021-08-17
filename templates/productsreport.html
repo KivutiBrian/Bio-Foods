@@ -141,6 +141,7 @@
                   <tr>
                       <th>ID</th>
                       <th>Product Name</th> 
+                      <th>Product Quantity</th> 
                       <th>Product Price</th>
                       <th>Update</th>
                       <th>Delete</th>
@@ -151,6 +152,7 @@
                     <tr>
                         <td>{{ each.id }}</td>
                         <td>{{ each.name }}</td>
+                        <td>{{ each.quantity }}</td>
                         <td>{{ each.price }}</td>
                         <td>
                           <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#update{{ each.id }}">Update</button>
@@ -169,6 +171,10 @@
                                       <div class="form-group">
                                         <label for="">Product Name</label>
                                         <input type="text" class="form-control" name="newname" autocomplete="off" value="{{ each.name }}">
+                                      </div>
+                                      <div class="form-group">
+                                        <label for="">Product Quantity</label>
+                                        <input type="text" class="form-control" name="newquantity" autocomplete="off" value="{{ each.quantity }}">
                                       </div>
                                       <div class="form-group">
                                         <label for="">Product Price</label>
@@ -208,7 +214,7 @@
       <footer class="sticky-footer">
         <div class="container my-auto">
           <div class="copyright text-center my-auto">
-            <span>Copyright © Your Website 2019</span>
+            <span>Copyright © Your Website 2021</span>
           </div>
         </div>
       </footer>
