@@ -127,6 +127,7 @@
                       <th>Email</th>
                       <th>Phone Number</th>
                       <th>Address</th>
+                      <th>View Orders</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -137,6 +138,12 @@
                         <td>{{ every.email }}</td>
                         <td>{{ every.phone }}</td>
                         <td>{{ every.address }}</td>
+                        <td>
+                          <a href="/orders/{{every.id}}" type="button" class="btn btn-outline-secondary" data-bs-toggle=""
+                        data-bs-target="">
+                        View Orders
+                          </a>
+                        </td>
                     </tr>
                   {% endfor %}
                 </tbody>

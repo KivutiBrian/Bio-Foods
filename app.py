@@ -1,6 +1,7 @@
 from flask import Flask,render_template,request, redirect,url_for,flash,session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from datetime import datetime, timedelta, date
 import json
 
 from models.JsonEncoder import AlchemyEncoder
@@ -99,7 +100,41 @@ def home():
         for order in orders:
             order_value += order.total
 
-        return render_template('index.html', customer_count = customer_count, product_count = product_count, order_count = order_count, order_value = order_value)
+        order_count_today = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1))).count()
+        order_value_today = 0
+        orders_today = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1))).all()
+        for order in orders_today:
+            order_value_today += order.total
+
+        banana_order_count_today = 0
+        banana_order_value_today = 0
+        banana_orders_today = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1)), Orders.product_id == 4).all()
+        for order in banana_orders_today:
+            banana_order_value_today += order.total
+            banana_order_count_today += order.quantity
+
+        arrowroots_order_count_today = 0
+        arrowroots_order_value_today = 0
+        arrowroots_orders_today = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1)), Orders.product_id == 5).all()
+        for order in arrowroots_orders_today:
+            arrowroots_order_value_today += order.total
+            arrowroots_order_count_today += order.quantity
+
+        oranges_order_count_today = 0
+        oranges_order_value_today = 0
+        oranges_orders_today = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1)), Orders.product_id == 3).all()
+        for order in oranges_orders_today:
+            oranges_order_value_today += order.total
+            oranges_order_count_today += order.quantity
+
+        pears_order_count_today = 0
+        pears_order_value_today = 0
+        pears_orders_today = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1)), Orders.product_id == 2).all()
+        for order in pears_orders_today:
+            pears_order_value_today += order.total
+            pears_order_count_today += order.quantity
+
+        return render_template('index.html', customer_count = customer_count, product_count = product_count, order_count = order_count, order_value = order_value, order_count_today = order_count_today, order_value_today = order_value_today, banana_order_count_today = banana_order_count_today, banana_order_value_today = banana_order_value_today, pears_order_count_today = pears_order_count_today, pears_order_value_today = pears_order_value_today, oranges_order_count_today = oranges_order_count_today, oranges_order_value_today = oranges_order_value_today, arrowroots_order_count_today = arrowroots_order_count_today, arrowroots_order_value_today = arrowroots_order_value_today)
     else:
         flash('Please login to gain access', 'danger')
         return redirect(url_for('admin'))
@@ -301,6 +336,12 @@ def orders():
 
     return render_template('eachorder.html',orders=orders)
 
+# orders for a particular customer
+@app.route('/orders/<int:x>', methods = ['GET','POST'])
+def customer_orders(x):
+    customer_orders = Orders.query.filter_by(customer_id = x).all()
+
+    return render_template('allorders.html', orderszote=customer_orders)
 
 @app.route('/customer/logout', methods=['GET','POST'])
 def customer_logout():
