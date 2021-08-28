@@ -2,6 +2,7 @@ from flask import Flask,render_template,request, redirect,url_for,flash,session
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from datetime import datetime, timedelta, date
+from sqlalchemy.sql.functions import func
 import json
 
 from models.JsonEncoder import AlchemyEncoder
@@ -106,35 +107,21 @@ def home():
         for order in orders_today:
             order_value_today += order.total
 
-        banana_order_count_today = 0
-        banana_order_value_today = 0
-        banana_orders_today = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1)), Orders.product_id == 4).all()
-        for order in banana_orders_today:
-            banana_order_value_today += order.total
-            banana_order_count_today += order.quantity
+        order_quantity_per_product = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1))).with_entities(Products.name, func.sum(Orders.quantity)).join(Products).group_by(Products.name).all()
+        quantity_bar_labels = []
+        quantity_bar_values = []
+        for label, value in order_quantity_per_product:
+            quantity_bar_labels.append(label)
+            quantity_bar_values.append(value)
 
-        arrowroots_order_count_today = 0
-        arrowroots_order_value_today = 0
-        arrowroots_orders_today = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1)), Orders.product_id == 5).all()
-        for order in arrowroots_orders_today:
-            arrowroots_order_value_today += order.total
-            arrowroots_order_count_today += order.quantity
+        order_value_per_product = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1))).with_entities(Products.name,  func.sum(Orders.total)).join(Products).group_by(Products.name).all()
+        value_bar_labels = []
+        value_bar_values = []
+        for label, value in order_value_per_product:
+            value_bar_labels.append(label)
+            value_bar_values.append(value)
 
-        oranges_order_count_today = 0
-        oranges_order_value_today = 0
-        oranges_orders_today = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1)), Orders.product_id == 3).all()
-        for order in oranges_orders_today:
-            oranges_order_value_today += order.total
-            oranges_order_count_today += order.quantity
-
-        pears_order_count_today = 0
-        pears_order_value_today = 0
-        pears_orders_today = Orders.query.filter(Orders.orderdate.between(date.today(), date.today() + timedelta(days=1)), Orders.product_id == 2).all()
-        for order in pears_orders_today:
-            pears_order_value_today += order.total
-            pears_order_count_today += order.quantity
-
-        return render_template('index.html', customer_count = customer_count, product_count = product_count, order_count = order_count, order_value = order_value, order_count_today = order_count_today, order_value_today = order_value_today, banana_order_count_today = banana_order_count_today, banana_order_value_today = banana_order_value_today, pears_order_count_today = pears_order_count_today, pears_order_value_today = pears_order_value_today, oranges_order_count_today = oranges_order_count_today, oranges_order_value_today = oranges_order_value_today, arrowroots_order_count_today = arrowroots_order_count_today, arrowroots_order_value_today = arrowroots_order_value_today)
+        return render_template('index.html', customer_count = customer_count, product_count = product_count, order_count = order_count, order_value = f'{order_value:,.0f}', order_count_today = order_count_today, order_value_today = f'{order_value_today:,.0f}', quantity_bar_labels = quantity_bar_labels, quantity_bar_values = quantity_bar_values, value_bar_labels = value_bar_labels, value_bar_values = value_bar_values)
     else:
         flash('Please login to gain access', 'danger')
         return redirect(url_for('admin'))
@@ -201,10 +188,12 @@ def delete_product(id):
 # admin view all order
 @app.route('/all/orders', methods=['GET','POST'])
 def all_orders():
-
     orderszote = Orders.fetch_all()
+    order_value = 0
+    for order in orderszote:
+        order_value += order.total
 
-    return render_template('allorders.html',orderszote=orderszote)
+    return render_template('allorders.html',orderszote=orderszote, order_value = f'{order_value:,.0f}')
 
 
 # customer login
@@ -305,9 +294,6 @@ def orderJson():
 
         if int(data['quantity']) > int(stock_item.quantity):
             flash('Quantity ordered is higher than stock remaining','danger')
-            print('==========')
-            print('Quantity ordered is higher than stock remaining - order and stock quantity not updated')
-            print('==========')
 
             return 'We have an error', 400
         else:            
@@ -340,8 +326,11 @@ def orders():
 @app.route('/orders/<int:x>', methods = ['GET','POST'])
 def customer_orders(x):
     customer_orders = Orders.query.filter_by(customer_id = x).all()
+    order_value = 0
+    for order in customer_orders:
+        order_value += order.total
 
-    return render_template('allorders.html', orderszote=customer_orders)
+    return render_template('allorders.html', orderszote=customer_orders, order_value = order_value)
 
 @app.route('/customer/logout', methods=['GET','POST'])
 def customer_logout():
